@@ -12,7 +12,8 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #70c5ce;
+            background: url('anh5.jpg') no-repeat center center;
+            background-size: cover;
         }
         #gameCanvas {
             border: 2px solid black;
@@ -63,7 +64,6 @@
         const character1Img = document.getElementById('character1');
         const character2Img = document.getElementById('character2');
 
-        // Cài đặt canvas và độ phân giải cho cả PC và mobile
         function setCanvasSize() {
             const aspectRatio = 320 / 480;
             const width = window.innerWidth > 320 ? 320 : window.innerWidth;
@@ -72,25 +72,19 @@
             canvas.height = height;
         }
 
-        // Kích thước các đối tượng trong game
         let birdY, birdVelocity, birdImg, birdWidth, birdHeight;
-
-        // Thiết lập nhân vật đã chọn
         let selectedBird = 'anh1.png';
 
-        // Khi chọn nhân vật
         function chooseCharacter(characterImage) {
             selectedBird = characterImage.src;
             birdImg.src = selectedBird;
-            characterSelect.style.display = 'none'; // Ẩn màn chọn nhân vật
+            characterSelect.style.display = 'none';
             startGame();
         }
 
-        // Cập nhật kích thước canvas khi thay đổi kích thước màn hình
         window.addEventListener('resize', setCanvasSize);
         setCanvasSize();
 
-        // Các thông số ban đầu cho trò chơi
         let gravity = 0.25;
         let jumpStrength = -5;
         let pipeWidth = 50;
@@ -102,25 +96,21 @@
         let gameTime = 0;
         let isJumping = false;
 
-        // Cài đặt ống
         const topPipeImg = new Image();
         const bottomPipeImg = new Image();
         topPipeImg.src = 'anh3.png'; 
         bottomPipeImg.src = 'anh2.png';
 
-        // Load hình ảnh chim
         birdImg = new Image();
         birdImg.src = selectedBird; 
 
         birdWidth = 60;
         birdHeight = 50;
 
-        // Hàm vẽ chim
         function drawBird() {
             ctx.drawImage(birdImg, 50, birdY, birdWidth, birdHeight);
         }
 
-        // Hàm vẽ ống
         function drawPipes() {
             for (let i = 0; i < pipes.length; i++) {
                 let pipeX = pipes[i].x;
@@ -131,7 +121,6 @@
             }
         }
 
-        // Hàm cập nhật ống
         function updatePipes() {
             if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
                 let pipeHeightTop = Math.floor(Math.random() * (canvas.height - pipeGap));
@@ -147,22 +136,14 @@
             });
         }
 
-        // Cập nhật trạng thái chim
         function updateBird() {
             birdVelocity += gravity;
             birdY += birdVelocity;
-            if (birdY + birdHeight > canvas.height) {
-                birdY = canvas.height - birdHeight;
-                birdVelocity = 0;
+            if (birdY + birdHeight > canvas.height || birdY < 0) {
                 gameOver();
-            }
-            if (birdY < 0) {
-                birdY = 0;
-                birdVelocity = 0;
             }
         }
 
-        // Kiểm tra va chạm
         function checkCollisions() {
             pipes.forEach(pipe => {
                 if (50 + birdWidth > pipe.x && 50 < pipe.x + pipeWidth) {
@@ -173,12 +154,10 @@
             });
         }
 
-        // Nhảy
         function jump() {
             birdVelocity = jumpStrength;
         }
 
-        // Kết thúc game
         function gameOver() {
             gameStarted = false;
             finalScore.innerText = score;
@@ -186,21 +165,15 @@
             canvas.style.display = 'none';
         }
 
-        // Vẽ điểm số
         function drawScore() {
             ctx.fillStyle = 'black';
             ctx.font = '20px Arial';
             ctx.fillText(`Score: ${score}`, 10, 30);
         }
 
-        // Cập nhật trò chơi
         function update() {
             if (!gameStarted) return;
             gameTime++;
-            if (gameTime % 300 === 0) {
-                pipeSpeed = Math.min(pipeSpeed + 0.1, 4);
-                pipeGap = Math.max(150, pipeGap - 5);
-            }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBird();
             drawPipes();
@@ -211,49 +184,12 @@
             requestAnimationFrame(update);
         }
 
-        // Điều khiển chim bằng bàn phím
-        document.addEventListener('keydown', () => {
-            if (gameStarted && !isJumping) {
-                jump();
-                isJumping = true;
-            }
-        });
-
-        document.addEventListener('keyup', () => {
-            isJumping = false;
-        });
-
-        // Điều khiển chim bằng chạm màn hình
-        canvas.addEventListener('touchstart', (event) => {
-            if (gameStarted && !isJumping) {
-                jump();
-                isJumping = true;
-            }
-            event.preventDefault();
-        });
-
-        canvas.addEventListener('touchend', () => {
-            isJumping = false;
-        });
-
-        // Bắt đầu game
-        function startGame() {
-            gameStarted = true;
-            score = 0;
-            pipes = [];
-            birdY = canvas.height / 2;
-            birdVelocity = 0;
-            gameTime = 0;
-            pipeGap = 200;
-            pipeSpeed = 1.5;
-            gameOverMessage.style.display = 'none';
-            canvas.style.display = 'block';
-            update();
-        }
-
-        // Chọn nhân vật
         character1Img.addEventListener('click', () => chooseCharacter(character1Img));
         character2Img.addEventListener('click', () => chooseCharacter(character2Img));
     </script>
 </body>
 </html>
+
+
+
+
