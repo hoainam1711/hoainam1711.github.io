@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #70c5ce;
+            flex-direction: column;
+        }
+        #gameCanvas {
+            border: 2px solid black;
+            display: block;
+            margin-top: 20px;
+        }
+        #gameOverMessage {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            color: black;
+            text-align: center;
+        }
+        .character-select {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        .character {
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .character:hover {
+            transform: scale(1.1);
+        }
+        #restartBtn {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            font-size: 18px;
+            margin-top: 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        #restartBtn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div id="characterSelect">
+        <div class="character-select">
+            <img src="anh1.png" class="character" id="character1" alt="Character 1">
+            <img src="anh4.png" class="character" id="character2" alt="Character 2">
+        </div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="gameOverMessage">
+        <p>Game Over!</p>
+        <p>Score: <span id="finalScore"></span></p>
+        <button id="restartBtn">Restart</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameOverMessage = document.getElementById('gameOverMessage');
+        const finalScore = document.getElementById('finalScore');
+        const restartBtn = document.getElementById('restartBtn');
+        const characterSelect = document.getElementById('characterSelect');
+        const character1Img = document.getElementById('character1');
+        const character2Img = document.getElementById('character2');
+
+        // Cài đặt canvas và độ phân giải cho cả PC và mobile
+        function setCanvasSize() {
+            const aspectRatio = 320 / 480;
+            const width = window.innerWidth > 320 ? 320 : window.innerWidth;
+            const height = width / aspectRatio;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        // Kích thước các đối tượng trong game
+        let birdY, birdVelocity, birdImg, birdWidth, birdHeight;
+
+        // Thiết lập nhân vật đã chọn
+        let selectedBird = 'anh1.png';
+
+        // Khi chọn nhân vật
+        function chooseCharacter(characterImage) {
+            selectedBird = characterImage.src;
+            birdImg.src = selectedBird;
+            characterSelect.style.display = 'none'; // Ẩn màn chọn nhân vật
+            startGame();
+        }
+
+        // Cập nhật kích thước canvas khi thay đổi kích thước màn hình
+        window.addEventListener('resize', setCanvasSize);
+        setCanvasSize();
+
+        // Các thông số ban đầu cho trò chơi
+        let gravity = 0.25;
+        let jumpStrength = -5;
+        let pipeWidth = 50;
+        let pipeGap = 200;
+        let pipeSpeed = 1.5;
+        let pipes = [];
+        let score = 0;
+        let gameStarted = false;
+        let gameTime = 0;
+        let isJumping = false;
+
+        // Cài đặt ống
+        const topPipeImg = new Image();
+        const bottomPipeImg = new Image();
+        topPipeImg.src = 'anh3.png'; 
+        bottomPipeImg.src = 'anh2.png';
+
+        // Load hình ảnh chim
+        birdImg = new Image();
+        birdImg.src = selectedBird; 
+
+        birdWidth = 60;
+        birdHeight = 50;
+
+        // Hàm vẽ chim
+        function drawBird() {
+            ctx.drawImage(birdImg, 50, birdY, birdWidth, birdHeight);
+        }
+
+        // Hàm vẽ ống
+        function drawPipes() {
+            for (let i = 0; i < pipes.length; i++) {
+                let pipeX = pipes[i].x;
+                let pipeHeightTop = pipes[i].top;
+                let pipeHeightBottom = pipes[i].bottom;
+                ctx.drawImage(topPipeImg, pipeX, 0, pipeWidth, pipeHeightTop);
+                ctx.drawImage(bottomPipeImg, pipeX, canvas.height - pipeHeightBottom, pipeWidth, pipeHeightBottom);
+            }
+        }
+
+        // Hàm cập nhật ống
+        function updatePipes() {
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
+                let pipeHeightTop = Math.floor(Math.random() * (canvas.height - pipeGap));
+                let pipeHeightBottom = canvas.height - pipeHeightTop - pipeGap;
+                pipes.push({x: canvas.width, top: pipeHeightTop, bottom: pipeHeightBottom});
+            }
+            pipes.forEach((pipe, index) => {
+                pipe.x -= pipeSpeed;
+                if (pipe.x + pipeWidth < 0) {
+                    pipes.splice(index, 1);
+                    score++;
+                }
+            });
+        }
+
+        // Cập nhật trạng thái chim
+        function updateBird() {
+            birdVelocity += gravity;
+            birdY += birdVelocity;
+            if (birdY + birdHeight > canvas.height) {
+                birdY = canvas.height - birdHeight;
+                birdVelocity = 0;
+                gameOver();
+            }
+            if (birdY < 0) {
+                birdY = 0;
+                birdVelocity = 0;
+            }
+        }
+
+        // Kiểm tra va chạm
+        function checkCollisions() {
+            pipes.forEach(pipe => {
+                if (50 + birdWidth > pipe.x && 50 < pipe.x + pipeWidth) {
+                    if (birdY < pipe.top || birdY + birdHeight > canvas.height - pipe.bottom) {
+                        gameOver();
+                    }
+                }
+            });
+        }
+
+        // Nhảy
+        function jump() {
+            birdVelocity = jumpStrength;
+        }
+
+        // Kết thúc game
+        function gameOver() {
+            gameStarted = false;
+            finalScore.innerText = score;
+            gameOverMessage.style.display = 'block';
+            canvas.style.display = 'none';
+            restartBtn.style.display = 'block'; // Hiển thị nút restart
+        }
+
+        // Vẽ điểm số
+        function drawScore() {
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 30);
+        }
+
+        // Cập nhật trò chơi
+        function update() {
+            if (!gameStarted) return;
+            gameTime++;
+            if (gameTime % 300 === 0) {
+                pipeSpeed = Math.min(pipeSpeed + 0.1, 4);
+                pipeGap = Math.max(150, pipeGap - 5);
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBird();
+            drawPipes();
+            drawScore();
+            updateBird();
+            updatePipes();
+            checkCollisions();
+            requestAnimationFrame(update);
+        }
+
+        // Điều khiển chim bằng bàn phím
+        document.addEventListener('keydown', () => {
+            if (gameStarted && !isJumping) {
+                jump();
+                isJumping = true;
+            }
+        });
+
+        document.addEventListener('keyup', () => {
+            isJumping = false;
+        });
+
+        // Điều khiển chim bằng chạm màn hình
+        canvas.addEventListener('touchstart', (event) => {
+            if (gameStarted && !isJumping) {
+                jump();
+                isJumping = true;
+            }
+            event.preventDefault();
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isJumping = false;
+        });
+
+        // Bắt đầu game
+        function startGame() {
+            gameStarted = true;
+            score = 0;
+            pipes = [];
+            birdY = canvas.height / 2;
+            birdVelocity = 0;
+            gameTime = 0;
+            pipeGap = 200;
+            pipeSpeed = 1.5;
+            gameOverMessage.style.display = 'none';
+            restartBtn.style.display = 'none'; // Ẩn nút restart khi bắt đầu lại
+            canvas.style.display = 'block';
+            update();
+        }
+
+        // Chọn nhân vật
+        character1Img.addEventListener('click', () => chooseCharacter(character1Img));
+        character2Img.addEventListener('click', () => chooseCharacter(character2Img));
+
+        // Restart game khi nhấn nút Restart
+        restartBtn.addEventListener('click', () => {
+            gameOverMessage.style.display = 'none';
+            restartBtn.style.display = 'none';
+            startGame();
+        });
+    </script>
+</body>
+</html>
