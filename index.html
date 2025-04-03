@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Clone</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB;  /* Nền ngoài màu xanh da trời nhạt */
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Tạo một container cho các nút */
+        #buttonsContainer {
+            position: absolute;
+            top: 50%;  /* Giữa màn hình */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;  /* Sắp xếp các nút theo cột */
+            gap: 10px;  /* Khoảng cách giữa các nút */
+        }
+
+        #restartButton {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;  /* Ẩn nút này khi chưa thua game */
+        }
+
+        #backToSelectButton {
+            padding: 10px 15px;
+            font-size: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;  /* Ẩn nút này khi chưa thua game */
+        }
+
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <!-- Container bao bọc các nút -->
+    <div id="buttonsContainer">
+        <button id="restartButton">Restart</button>
+        <button id="backToSelectButton">&lt;</button>  <!-- Dùng ký hiệu < -->
+    </div>
+
+    <script src="characterSelect.js"></script>
+    <script src="script.js" defer></script>
+
+</body>
+</html>
