@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5x5 Sliding Puzzle Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tile {
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+            aspect-ratio: 1/1; /* This ensures the tile is square */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tile:hover {
+            transform: scale(1.03);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .empty {
+            visibility: hidden;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            border-radius: 50%;
+            animation: fall 5s linear forwards;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        .level-indicator {
+            transition: all 0.3s ease;
+        }
+        .level-indicator.active {
+            transform: scale(1.1);
+            font-weight: bold;
+        }
+        #gameBoard {
+            width: min(90vw, 500px); /* Limit maximum board size */
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-purple-800 mb-2">Sliding Puzzle Challenge</h1>
+            <p class="text-lg text-gray-600">Slide the tiles to arrange them in numerical order</p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Game controls -->
+            <div class="w-full lg:w-1/4 bg-white rounded-xl shadow-lg p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">Difficulty Levels</h2>
+                    <div class="grid grid-cols-5 gap-2">
+                        <button onclick="setLevel(1)" class="level-indicator bg-green-100 text-green-800 py-2 rounded-lg">1</button>
+                        <button onclick="setLevel(2)" class="level-indicator bg-green-200 text-green-800 py-2 rounded-lg">2</button>
+                        <button onclick="setLevel(3)" class="level-indicator bg-yellow-100 text-yellow-800 py-2 rounded-lg">3</button>
+                        <button onclick="setLevel(4)" class="level-indicator bg-yellow-200 text-yellow-800 py-2 rounded-lg">4</button>
+                        <button onclick="setLevel(5)" class="level-indicator bg-orange-100 text-orange-800 py-2 rounded-lg">5</button>
+                        <button onclick="setLevel(6)" class="level-indicator bg-orange-200 text-orange-800 py-2 rounded-lg">6</button>
+                        <button onclick="setLevel(7)" class="level-indicator bg-red-100 text-red-800 py-2 rounded-lg">7</button>
+                        <button onclick="setLevel(8)" class="level-indicator bg-red-200 text-red-800 py-2 rounded-lg">8</button>
+                        <button onclick="setLevel(9)" class="level-indicator bg-red-300 text-red-800 py-2 rounded-lg">9</button>
+                        <button onclick="setLevel(10)" class="level-indicator bg-red-400 text-red-800 py-2 rounded-lg">10</button>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">Game Stats</h2>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Moves:</span>
+                            <span id="moveCount" class="font-bold">0</span>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Time:</span>
+                            <span id="timeCount" class="font-bold">0s</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Level:</span>
+                            <span id="levelDisplay" class="font-bold">1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <button onclick="startGame()" class="bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-play"></i> Start Game
+                    </button>
+                    <button onclick="resetGame()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                    <button onclick="showSolution()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 py-3 rounded-lg font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-lightbulb"></i> Hint
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game board -->
+            <div class="w-full lg:w-3/4 flex flex-col items-center">
+                <div id="gameBoard" class="grid grid-cols-5 gap-3 mb-8 relative">
+                    <!-- Tiles will be generated here -->
+                </div>
+
+                <div id="winMessage" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-xl p-8 max-w-md w-full text-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-r from-purple-100 to-pink-100 opacity-30"></div>
+                        <h2 class="text-3xl font-bold text-purple-800 mb-4">Congratulations!</h2>
+                        <p class="text-lg mb-2">You solved the puzzle in <span id="finalMoves" class="font-bold">0</span> moves!</p>
+                        <p class="text-lg mb-6">Time: <span id="finalTime" class="font-bold">0s</span></p>
+                        <div class="flex gap-4 justify-center">
+                            <button onclick="nextLevel()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium">
+                                Next Level
+                            </button>
+                            <button onclick="closeWinMessage()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg font-medium">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="hintOverlay" class="hidden absolute inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center">
+                    <div class="bg-white p-6 rounded-lg max-w-md text-center">
+                        <h3 class="text-xl font-bold mb-4">Puzzle Hint</h3>
+                        <p id="hintText" class="mb-4">Try moving the tiles to form the first row in order.</p>
+                        <button onclick="hideHint()" class="bg-purple-600 text-white px-4 py-2 rounded-lg">Got it!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        let board = [];
+        let emptyPos = { row: 4, col: 4 };
+        let moveCount = 0;
+        let startTime = 0;
+        let timerInterval;
+        let currentLevel = 1;
+        let gameStarted = false;
+
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', () => {
+            createBoard();
+            updateLevelIndicator();
+        });
+
+        // Create the 5x5 board
+        function createBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            // Create 25 tiles (24 numbers + 1 empty)
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const value = i * 5 + j + 1;
+                    const tile = document.createElement('div');
+                    tile.className = `tile bg-white rounded-lg flex items-center justify-center text-2xl font-bold cursor-pointer`;
+                    tile.id = `tile-${i}-${j}`;
+                    
+                    if (i === 4 && j === 4) {
+                        tile.classList.add('empty');
+                        tile.textContent = '';
+                    } else {
+                        tile.textContent = value;
+                        // Different colors based on value
+                        const hue = (value * 10) % 360;
+                        tile.style.backgroundColor = `hsl(${hue}, 80%, 85%)`;
+                        tile.style.color = `hsl(${hue}, 60%, 30%)`;
+                    }
+                    
+                    tile.addEventListener('click', () => handleTileClick(i, j));
+                    gameBoard.appendChild(tile);
+                }
+            }
+            
+            // Initialize the board array
+            resetBoard();
+        }
+
+        // Reset the board to initial state
+        function resetBoard() {
+            board = [];
+            for (let i = 0; i < 5; i++) {
+                board[i] = [];
+                for (let j = 0; j < 5; j++) {
+                    board[i][j] = i * 5 + j + 1;
+                }
+            }
+            board[4][4] = 0; // Empty space
+            emptyPos = { row: 4, col: 4 };
+            updateBoardView();
+        }
+
+        // Update the visual representation of the board
+        function updateBoardView() {
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const tile = document.getElementById(`tile-${i}-${j}`);
+                    if (board[i][j] === 0) {
+                        tile.classList.add('empty');
+                        tile.textContent = '';
+                    } else {
+                        tile.classList.remove('empty');
+                        tile.textContent = board[i][j];
+                    }
+                }
+            }
+        }
+
+        // Handle tile click
+        function handleTileClick(row, col) {
+            if (!gameStarted) return;
+            
+            // Check if the clicked tile is adjacent to the empty space
+            if ((Math.abs(row - emptyPos.row) === 1 && col === emptyPos.col) || 
+                (Math.abs(col - emptyPos.col) === 1 && row === emptyPos.row)) {
+                
+                // Swap the clicked tile with the empty space
+                board[emptyPos.row][emptyPos.col] = board[row][col];
+                board[row][col] = 0;
+                emptyPos = { row, col };
+                
+                moveCount++;
+                document.getElementById('moveCount').textContent = moveCount;
+                
+                updateBoardView();
+                
+                // Check if the puzzle is solved
+                if (isSolved()) {
+                    endGame();
+                }
+            }
+        }
+
+        // Check if the puzzle is solved
+        function isSolved() {
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    // Last tile should be empty
+                    if (i === 4 && j === 4) {
+                        if (board[i][j] !== 0) return false;
+                    } 
+                    // Other tiles should be in order
+                    else if (board[i][j] !== i * 5 + j + 1) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        // Start the game
+        function startGame() {
+            if (gameStarted) return;
+            
+            gameStarted = true;
+            moveCount = 0;
+            document.getElementById('moveCount').textContent = moveCount;
+            
+            // Start timer
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            // Shuffle the board based on difficulty level
+            shuffleBoard();
+            
+            // Update UI
+            document.getElementById('levelDisplay').textContent = currentLevel;
+        }
+
+        // Update the timer display
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('timeCount').textContent = `${elapsed}s`;
+        }
+
+        // Shuffle the board based on difficulty level
+        function shuffleBoard() {
+            const shuffleCount = currentLevel * 10 + 50; // More shuffles for higher levels
+            
+            for (let i = 0; i < shuffleCount; i++) {
+                const directions = [];
+                const { row, col } = emptyPos;
+                
+                // Find possible moves
+                if (row > 0) directions.push({ dr: -1, dc: 0 });
+                if (row < 4) directions.push({ dr: 1, dc: 0 });
+                if (col > 0) directions.push({ dr: 0, dc: -1 });
+                if (col < 4) directions.push({ dr: 0, dc: 1 });
+                
+                // Randomly select a direction
+                const dir = directions[Math.floor(Math.random() * directions.length)];
+                const newRow = row + dir.dr;
+                const newCol = col + dir.dc;
+                
+                // Make the move
+                board[row][col] = board[newRow][newCol];
+                board[newRow][newCol] = 0;
+                emptyPos = { row: newRow, col: newCol };
+            }
+            
+            updateBoardView();
+        }
+
+        // End the game when solved
+        function endGame() {
+            gameStarted = false;
+            clearInterval(timerInterval);
+            
+            // Show win message
+            document.getElementById('finalMoves').textContent = moveCount;
+            document.getElementById('finalTime').textContent = document.getElementById('timeCount').textContent;
+            document.getElementById('winMessage').classList.remove('hidden');
+            
+            // Create confetti effect
+            createConfetti();
+        }
+
+        // Create confetti effect
+        function createConfetti() {
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+            const winMessage = document.getElementById('winMessage');
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = -10 + 'px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+                winMessage.appendChild(confetti);
+                
+                // Remove confetti after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+
+        // Close win message
+        function closeWinMessage() {
+            document.getElementById('winMessage').classList.add('hidden');
+        }
+
+        // Go to next level
+        function nextLevel() {
+            if (currentLevel < 10) {
+                currentLevel++;
+                updateLevelIndicator();
+                closeWinMessage();
+                resetGame();
+            } else {
+                closeWinMessage();
+                alert('Congratulations! You completed all levels!');
+            }
+        }
+
+        // Reset the game
+        function resetGame() {
+            gameStarted = false;
+            clearInterval(timerInterval);
+            document.getElementById('moveCount').textContent = '0';
+            document.getElementById('timeCount').textContent = '0s';
+            resetBoard();
+        }
+
+        // Set the difficulty level
+        function setLevel(level) {
+            currentLevel = level;
+            updateLevelIndicator();
+            resetGame();
+        }
+
+        // Update the active level indicator
+        function updateLevelIndicator() {
+            document.querySelectorAll('.level-indicator').forEach((el, index) => {
+                if (index + 1 === currentLevel) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        }
+
+        // Show solution hint
+        function showSolution() {
+            if (!gameStarted) return;
+            
+            document.getElementById('hintText').textContent = getHintText();
+            document.getElementById('hintOverlay').classList.remove('hidden');
+        }
+
+        // Get hint text based on current state
+        function getHintText() {
+            // Simple hint - suggest moving toward the correct position
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    if (board[i][j] !== 0 && board[i][j] !== i * 5 + j + 1) {
+                        const targetRow = Math.floor((board[i][j] - 1) / 5);
+                        const targetCol = (board[i][j] - 1) % 5;
+                        
+                        if (i < targetRow) return `Try moving tile ${board[i][j]} downward`;
+                        if (i > targetRow) return `Try moving tile ${board[i][j]} upward`;
+                        if (j < targetCol) return `Try moving tile ${board[i][j]} right`;
+                        if (j > targetCol) return `Try moving tile ${board[i][j]} left`;
+                    }
+                }
+            }
+            
+            return "You're very close to solving the puzzle!";
+        }
+
+        // Hide hint overlay
+        function hideHint() {
+            document.getElementById('hintOverlay').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
