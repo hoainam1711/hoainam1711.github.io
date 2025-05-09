@@ -5,16 +5,6 @@
   <title>Comic Stars Fighting</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    :root {
-      --btn-size: 50px;
-    }
-
-    @media (max-width: 768px) {
-      :root {
-        --btn-size: 60px;
-      }
-    }
-
     body {
       margin: 0;
       background: #000;
@@ -57,24 +47,24 @@
 
     .dpad {
       display: grid;
-      grid-template-columns: var(--btn-size) var(--btn-size) var(--btn-size);
-      grid-template-rows: var(--btn-size) var(--btn-size);
+      grid-template-columns: 50px 50px 50px;
+      grid-template-rows: 50px 50px;
       justify-items: center;
       align-items: center;
     }
 
     .action-pad {
       display: grid;
-      grid-template-columns: repeat(3, var(--btn-size));
-      grid-template-rows: repeat(2, var(--btn-size));
+      grid-template-columns: repeat(3, 50px);
+      grid-template-rows: repeat(2, 50px);
       justify-items: center;
       align-items: center;
     }
 
     button {
-      width: var(--btn-size);
-      height: var(--btn-size);
-      font-size: calc(var(--btn-size) * 0.4);
+      width: 50px;
+      height: 50px;
+      font-size: 18px;
       border: none;
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.8);
