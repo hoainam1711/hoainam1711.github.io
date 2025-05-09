@@ -5,6 +5,16 @@
   <title>Comic Stars Fighting</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    :root {
+      --btn-size: 50px;
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --btn-size: 60px;
+      }
+    }
+
     body {
       margin: 0;
       background: #000;
@@ -20,11 +30,26 @@
       max-width: 1000px;
       margin: auto;
       aspect-ratio: 4/3;
+      background: #000;
     }
 
     ruffle-player {
       width: 100%;
       height: 100%;
+    }
+
+    #fullscreen-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.8);
+      color: black;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
     }
 
     #controls {
@@ -47,24 +72,24 @@
 
     .dpad {
       display: grid;
-      grid-template-columns: 50px 50px 50px;
-      grid-template-rows: 50px 50px;
+      grid-template-columns: var(--btn-size) var(--btn-size) var(--btn-size);
+      grid-template-rows: var(--btn-size) var(--btn-size);
       justify-items: center;
       align-items: center;
     }
 
     .action-pad {
       display: grid;
-      grid-template-columns: repeat(3, 50px);
-      grid-template-rows: repeat(2, 50px);
+      grid-template-columns: repeat(3, var(--btn-size));
+      grid-template-rows: repeat(2, var(--btn-size));
       justify-items: center;
       align-items: center;
     }
 
     button {
-      width: 50px;
-      height: 50px;
-      font-size: 18px;
+      width: var(--btn-size);
+      height: var(--btn-size);
+      font-size: calc(var(--btn-size) * 0.4);
       border: none;
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.8);
@@ -76,6 +101,7 @@
 <body>
   <h1>Comic Stars Fighting</h1>
   <div id="container">
+    <button id="fullscreen-toggle">Phóng to</button>
     <!-- Game sẽ chèn vào đây -->
     <div id="controls">
       <div class="control-group">
@@ -151,6 +177,36 @@
       document.querySelectorAll("button[data-code]").forEach(btn => {
         const code = btn.getAttribute("data-code");
         setupButtonEvents(btn, code);
+      });
+
+      // Phóng to / thu nhỏ
+      const fullscreenBtn = document.getElementById("fullscreen-toggle");
+      let isFullscreen = false;
+
+      fullscreenBtn.addEventListener("click", () => {
+        const container = document.getElementById("container");
+
+        if (!isFullscreen) {
+          if (container.requestFullscreen) {
+            container.requestFullscreen();
+          } else if (container.webkitRequestFullscreen) {
+            container.webkitRequestFullscreen();
+          } else if (container.msRequestFullscreen) {
+            container.msRequestFullscreen();
+          }
+          fullscreenBtn.textContent = "Thu nhỏ";
+          isFullscreen = true;
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          }
+          fullscreenBtn.textContent = "Phóng to";
+          isFullscreen = false;
+        }
       });
     });
   </script>
