@@ -1,140 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Comic Stars Fighting 3.5.2</title>
-  <script src="ruffle.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Game Hub</title>
   <style>
     body {
       margin: 0;
-      background: black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      touch-action: none;
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
     }
 
-    #joystick-container {
-      position: absolute;
-      bottom: 40px;
-      left: 40px;
-      width: 120px;
-      height: 120px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 50%;
-      touch-action: none;
+    h1 {
+      text-align: center;
+      padding: 20px;
+      font-size: 32px;
     }
 
-    #joystick {
-      width: 60px;
-      height: 60px;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      position: absolute;
-      left: 30px;
-      top: 30px;
-      touch-action: none;
-      transition: transform 0.05s ease;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .game-card {
+      background: #222;
+      border-radius: 12px;
+      overflow: hidden;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+      border: 1px solid #333;
+    }
+
+    .game-card:hover {
+      transform: scale(1.03);
+    }
+
+    .game-card img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+    }
+
+    .game-card .title {
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    @media (hover: none) {
+      .game-card:hover {
+        transform: none;
+      }
     }
   </style>
 </head>
 <body>
+  <h1>🎮 Mini Game Hub</h1>
 
-  <embed src="comic-stars-fighting-352.swf" width="800" height="600">
+  <div class="grid">
+    <a href="game1/sieuhung.html" class="game-card">
+      <img src="game1/thumb.jpg" alt="Game 1" />
+      <div class="title">Comic Stars Fighting</div>
+    </a>
 
-  <!-- Nút di chuyển ảo -->
-  <div id="joystick-container">
-    <div id="joystick"></div>
+    <a href="game2/index.html" class="game-card">
+      <img src="game2/thumb.jpg" alt="Game 2" />
+      <div class="title">Flappy Bird</div>
+    </a>
+
+    <a href="game3/index.html" class="game-card">
+      <img src="game3/thumb.jpg" alt="Game 3" />
+      <div class="title">Sudoku</div>
+    </a>
+
+    <!-- Bạn có thể thêm nhiều game khác tương tự -->
   </div>
-
-  <script>
-    const joystick = document.getElementById("joystick");
-    const container = document.getElementById("joystick-container");
-    let origin = { x: 0, y: 0 };
-    let currentKey = null;
-    let dragging = false;
-
-    function triggerKey(key) {
-      if (key !== currentKey) {
-        if (currentKey) {
-          document.dispatchEvent(new KeyboardEvent("keyup", { key: currentKey }));
-        }
-        if (key) {
-          document.dispatchEvent(new KeyboardEvent("keydown", { key }));
-        }
-        currentKey = key;
-      }
-    }
-
-    function resetKey() {
-      if (currentKey) {
-        document.dispatchEvent(new KeyboardEvent("keyup", { key: currentKey }));
-        currentKey = null;
-      }
-    }
-
-    function handleMove(clientX, clientY) {
-      const dx = clientX - origin.x;
-      const dy = clientY - origin.y;
-      const distance = Math.min(Math.hypot(dx, dy), 40);
-      const angle = Math.atan2(dy, dx);
-
-      const x = distance * Math.cos(angle);
-      const y = distance * Math.sin(angle);
-
-      joystick.style.transform = `translate(${x}px, ${y}px)`;
-
-      if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx < -10) triggerKey("a");
-        else if (dx > 10) triggerKey("d");
-        else resetKey();
-      } else {
-        if (dy < -10) triggerKey("w");
-        else if (dy > 10) triggerKey("s");
-        else resetKey();
-      }
-    }
-
-    // Touch support
-    container.addEventListener("touchstart", (e) => {
-      const rect = container.getBoundingClientRect();
-      origin.x = rect.left + rect.width / 2;
-      origin.y = rect.top + rect.height / 2;
-      dragging = true;
-    });
-
-    container.addEventListener("touchmove", (e) => {
-      if (!dragging) return;
-      const touch = e.touches[0];
-      handleMove(touch.clientX, touch.clientY);
-    }, { passive: false });
-
-    container.addEventListener("touchend", () => {
-      joystick.style.transform = `translate(0px, 0px)`;
-      resetKey();
-      dragging = false;
-    });
-
-    // Mouse support
-    container.addEventListener("mousedown", (e) => {
-      const rect = container.getBoundingClientRect();
-      origin.x = rect.left + rect.width / 2;
-      origin.y = rect.top + rect.height / 2;
-      dragging = true;
-    });
-
-    window.addEventListener("mousemove", (e) => {
-      if (!dragging) return;
-      handleMove(e.clientX, e.clientY);
-    });
-
-    window.addEventListener("mouseup", () => {
-      if (!dragging) return;
-      joystick.style.transform = `translate(0px, 0px)`;
-      resetKey();
-      dragging = false;
-    });
-  </script>
 </body>
 </html>
