@@ -1,19 +1,140 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trang Game Nhỏ</title>
-  <link rel="stylesheet" href="index.css">
+  <title>Comic Stars Fighting 3.5.2</title>
+  <script src="ruffle.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      touch-action: none;
+    }
+
+    #joystick-container {
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      width: 120px;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      touch-action: none;
+    }
+
+    #joystick {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      position: absolute;
+      left: 30px;
+      top: 30px;
+      touch-action: none;
+      transition: transform 0.05s ease;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Chào mừng đến với Trang Game Nhỏ</h1>
-    <div class="game-links">
-      <a href="flapbybird.html" class="game-card">Flappy Bird</a>
-      <a href="xephinh.html" class="game-card">Xếp Hình</a>
-      <a href="sieuhung.html" class="game-card">Siêu Hùng đại chiến</a>
-    </div>
+
+  <embed src="comic-stars-fighting-352.swf" width="800" height="600">
+
+  <!-- Nút di chuyển ảo -->
+  <div id="joystick-container">
+    <div id="joystick"></div>
   </div>
+
+  <script>
+    const joystick = document.getElementById("joystick");
+    const container = document.getElementById("joystick-container");
+    let origin = { x: 0, y: 0 };
+    let currentKey = null;
+    let dragging = false;
+
+    function triggerKey(key) {
+      if (key !== currentKey) {
+        if (currentKey) {
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: currentKey }));
+        }
+        if (key) {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key }));
+        }
+        currentKey = key;
+      }
+    }
+
+    function resetKey() {
+      if (currentKey) {
+        document.dispatchEvent(new KeyboardEvent("keyup", { key: currentKey }));
+        currentKey = null;
+      }
+    }
+
+    function handleMove(clientX, clientY) {
+      const dx = clientX - origin.x;
+      const dy = clientY - origin.y;
+      const distance = Math.min(Math.hypot(dx, dy), 40);
+      const angle = Math.atan2(dy, dx);
+
+      const x = distance * Math.cos(angle);
+      const y = distance * Math.sin(angle);
+
+      joystick.style.transform = `translate(${x}px, ${y}px)`;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx < -10) triggerKey("a");
+        else if (dx > 10) triggerKey("d");
+        else resetKey();
+      } else {
+        if (dy < -10) triggerKey("w");
+        else if (dy > 10) triggerKey("s");
+        else resetKey();
+      }
+    }
+
+    // Touch support
+    container.addEventListener("touchstart", (e) => {
+      const rect = container.getBoundingClientRect();
+      origin.x = rect.left + rect.width / 2;
+      origin.y = rect.top + rect.height / 2;
+      dragging = true;
+    });
+
+    container.addEventListener("touchmove", (e) => {
+      if (!dragging) return;
+      const touch = e.touches[0];
+      handleMove(touch.clientX, touch.clientY);
+    }, { passive: false });
+
+    container.addEventListener("touchend", () => {
+      joystick.style.transform = `translate(0px, 0px)`;
+      resetKey();
+      dragging = false;
+    });
+
+    // Mouse support
+    container.addEventListener("mousedown", (e) => {
+      const rect = container.getBoundingClientRect();
+      origin.x = rect.left + rect.width / 2;
+      origin.y = rect.top + rect.height / 2;
+      dragging = true;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!dragging) return;
+      handleMove(e.clientX, e.clientY);
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (!dragging) return;
+      joystick.style.transform = `translate(0px, 0px)`;
+      resetKey();
+      dragging = false;
+    });
+  </script>
 </body>
 </html>
